@@ -130,7 +130,9 @@ function _buildServerBrowser() {
         </div>`;
 
     document.getElementById('btn-add-server').addEventListener('click', () => {
-        const val = document.getElementById('server-input').value.trim();
+        let val = document.getElementById('server-input').value.trim();
+        // Strip any protocol prefix and trailing slashes
+        val = val.replace(/^https?:\/\//,'').replace(/^wss?:\/\//,'').replace(/\/+$/,'');
         if (!val) return;
         if (!_savedServers.includes(val)) {
             _savedServers.push(val);
@@ -235,7 +237,10 @@ function _init() {
 }
 
 function _initMultiplayer(host) {
-    const wsUrl = `ws://${host}`;
+    // Clean host just in case
+    const cleanHost = host.replace(/^https?:\/\//,'').replace(/^wss?:\/\//,'').replace(/\/+$/,'');
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${proto}://${cleanHost}`;
     GAME.multiplayer = true;
 
     Network.connect(wsUrl, (isHost, localId) => {
