@@ -255,12 +255,14 @@ function _initMultiplayer(host) {
     Render.init();
     Effects.init();
     Audio.init();
-    World.generate();
-    Player.create();
 
     if (Network.isHost()) {
+        World.generate();
         AI.init();
     }
+    // Clients build their world from the host's first gameState (via Network._buildClientWorld)
+
+    Player.create();
     UI.init();
 
     // Tell server who we are
@@ -302,15 +304,15 @@ function _loopMulti(now) {
     Player.update(dt);
     World.update(dt);
     Buildings.update(dt);
-    Network.updateRemotePlayers(dt); // simulate remote players on host
+    Network.updateRemotePlayers(dt);
 
     if (Network.isHost()) {
-        AI.update(dt);    // only host runs AI
+        AI.update(dt);
         Combat.update(dt);
     }
 
     Effects.update(dt);
-    Network.update(dt);  // sync state / send inputs
+    Network.update(dt);
     UI.update(dt);
     Render.render();
 }

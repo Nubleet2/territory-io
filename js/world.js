@@ -315,6 +315,20 @@ const World = (() => {
         node.ring.material.opacity = factionId ? 0.5 : 0.35;
     }
 
+    function addNodeAt(x, z) {
+        _addNode(x, z);
+    }
+
+    function addResourceAt(x, z) {
+        const group = Render.createResourceMesh(x, z);
+        GAME.scene.add(group);
+        GAME.resources.push({
+            x, z, active:true,
+            hp:CONFIG.ROCK_HP, maxHp:CONFIG.ROCK_HP,
+            respawnTimer:0, group,
+        });
+    }
+
     function setNodeColor(node, factionId) {
         _colorNode(node, factionId);
     }
@@ -443,5 +457,6 @@ const World = (() => {
     }
 
     return { generate, update, getMouseWorldPos, setNodeColor, damageResource,
-             hasEnemyStructures, hasFriendlyShip, getCapturingFaction, nearestOwnedNode };
+             hasEnemyStructures, hasFriendlyShip, getCapturingFaction, nearestOwnedNode,
+             addNodeAt, addResourceAt };
 })();
