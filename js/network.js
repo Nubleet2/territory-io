@@ -12,9 +12,10 @@ const Network = (() => {
 
     // ── CONNECT ───────────────────────────────────────────────────────────
     function connect(wsUrl, onReady) {
-        // Auto-detect secure websocket if served over https
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const url   = wsUrl.startsWith('ws') ? wsUrl : `${proto}://${wsUrl}`;
+        // Always strip any existing protocol and re-apply correct one
+        const clean = wsUrl.replace(/^wss?:\/\//, '').replace(/^https?:\/\//, '');
+        const url   = `${proto}://${clean}`;
         _ws = new WebSocket(url);
         _ws.onopen    = ()  => { _connected = true; };
         _ws.onclose   = ()  => { _connected = false; UI.showMsg('Disconnected from server', 'err'); };
