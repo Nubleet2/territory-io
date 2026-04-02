@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Territory.io</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#000; overflow:hidden; font-family:'Courier New',monospace; }
+        #gameCanvas { display:block; }
+        #hud { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+
+        #res-panel { position:absolute; top:14px; left:14px; pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            color:#0cf; font-size:13px; padding:10px 16px; border-radius:3px; border-left:3px solid #0cf; }
+        #res-panel span { color:#fff; font-size:16px; font-weight:bold; }
+
+        #territory-bar { position:absolute; top:14px; left:50%; transform:translateX(-50%); pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            padding:8px 20px; border-radius:3px; text-align:center; min-width:420px; }
+        #territory-bar .label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.4); margin-bottom:6px; }
+        #terr-bars { display:flex; gap:6px; align-items:flex-end; justify-content:center; }
+        .tfbar { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; }
+        .tfbar-fill { width:70px; border-radius:2px; transition:height 0.5s; }
+
+        #faction-badge { position:absolute; bottom:14px; left:14px; pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            border-left:3px solid #fff; padding:10px 16px; color:#fff; font-size:13px; border-radius:3px; }
+        #faction-badge .sub { font-size:10px; color:rgba(255,255,255,0.4); margin-top:4px; letter-spacing:1px; }
+
+        #hp-bar-wrap { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            padding:8px 16px; border-radius:3px; width:260px; }
+        #hp-bar-wrap .label { font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-bottom:5px; }
+        #hp-bar { height:8px; background:#1a2a1a; border-radius:2px; overflow:hidden; }
+        #hp-fill { height:100%; background:#44ff66; border-radius:2px; transition:width 0.2s; }
+
+        #shield-bar-wrap { position:absolute; bottom:64px; left:50%; transform:translateX(-50%); pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            padding:5px 16px; border-radius:3px; width:260px; }
+        #shield-bar-wrap .label { font-size:9px; color:rgba(100,180,255,0.5); letter-spacing:2px; margin-bottom:3px; }
+        #shield-bar { height:5px; background:#0a1220; border-radius:2px; overflow:hidden; }
+        #shield-fill { height:100%; background:#44aaff; border-radius:2px; transition:width 0.15s; }
+
+        #xp-bar-wrap { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            padding:6px 16px; border-radius:3px; width:260px; }
+        #xp-top { display:flex; justify-content:space-between; font-size:9px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:4px; }
+        #xp-bar { height:5px; background:#0a1220; border-radius:2px; overflow:hidden; }
+        #xp-fill { height:100%; background:#ffcc22; border-radius:2px; transition:width 0.3s; width:0%; }
+
+        #minimap { position:absolute; bottom:14px; right:14px; pointer-events:none;
+            border:1px solid rgba(255,255,255,0.15); border-radius:3px; background:rgba(0,0,15,0.9); }
+
+        #build-menu { position:absolute; bottom:110px; left:50%; transform:translateX(-50%);
+            display:none; flex-direction:row; gap:6px; pointer-events:all; }
+        .bbtn { background:rgba(0,10,30,0.95); border:1px solid rgba(0,200,255,0.3);
+            color:#0cf; padding:10px 14px; cursor:pointer; font-family:'Courier New';
+            font-size:11px; border-radius:3px; transition:all 0.15s; text-align:center; min-width:100px; }
+        .bbtn:hover { background:rgba(0,40,80,0.95); border-color:#0cf; color:#fff; }
+        .bbtn .cost { color:rgba(255,200,0,0.8); font-size:10px; margin-top:3px; }
+        .bbtn .desc { color:rgba(255,255,255,0.35); font-size:9px; margin-top:2px; }
+
+        #nearby-nodes { position:absolute; top:14px; right:14px; pointer-events:none;
+            background:rgba(0,5,20,0.82); border:1px solid rgba(255,255,255,0.12);
+            padding:10px 14px; border-radius:3px; min-width:160px; border-right:3px solid rgba(255,255,255,0.2); }
+
+        #hud-msg { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            font-size:14px; color:#fff; background:rgba(0,0,0,0.75); padding:10px 22px;
+            border-radius:3px; pointer-events:none; border:1px solid rgba(255,255,255,0.2);
+            letter-spacing:2px; opacity:0; transition:opacity 0.4s; }
+
+        #build-cursor { position:absolute; pointer-events:none; display:none; font-size:11px;
+            color:#0cf; background:rgba(0,20,40,0.9); padding:5px 10px; border-radius:3px;
+            border:1px solid #0cf5; transform:translate(-50%,-130%); letter-spacing:1px; }
+
+        #overlay { position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.92); display:flex; align-items:center;
+            justify-content:center; flex-direction:column; z-index:999; overflow-y:auto; padding:20px 0; }
+        #overlay h1 { font-size:48px; letter-spacing:8px; color:#0cf; margin-bottom:4px; }
+        #overlay .sub { font-size:12px; letter-spacing:3px; color:rgba(255,255,255,0.4); margin-bottom:24px; }
+        #overlay .section-label { font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.3); margin-bottom:8px; }
+        #overlay .factions { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; justify-content:center; }
+        .fcard { border:1px solid rgba(255,255,255,0.15); padding:14px 20px; cursor:pointer;
+            border-radius:3px; transition:all 0.2s; text-align:center; min-width:130px; pointer-events:all; }
+        .fcard:hover { background:rgba(255,255,255,0.05); }
+        .fcard.selected { border-width:2px; background:rgba(255,255,255,0.08); }
+        .fcard .fname { font-size:12px; letter-spacing:2px; margin-bottom:4px; }
+        .fcard .fworld { font-size:9px; color:rgba(255,255,255,0.4); }
+
+        #ship-cards { display:flex; gap:10px; margin-bottom:28px; flex-wrap:wrap; justify-content:center; }
+        .scard { border:1px solid rgba(255,255,255,0.12); padding:12px 14px; cursor:pointer;
+            border-radius:3px; transition:all 0.2s; text-align:center; min-width:108px; pointer-events:all; }
+        .scard:hover { background:rgba(255,255,255,0.05); }
+        .scard.selected { border-width:2px; background:rgba(255,255,255,0.08); }
+        .scard .sname { font-size:11px; letter-spacing:1px; margin-bottom:4px; font-weight:bold; }
+        .scard .sdesc { font-size:8px; color:rgba(255,255,255,0.35); line-height:1.5; }
+        .scard .sstats { font-size:8px; color:rgba(255,255,255,0.25); margin-top:5px; line-height:1.6; }
+
+        #start-btn { background:rgba(0,200,255,0.12); border:1px solid #0cf;
+            color:#0cf; padding:12px 40px; font-family:'Courier New'; font-size:14px;
+            letter-spacing:3px; cursor:pointer; border-radius:3px; transition:all 0.2s; pointer-events:all; }
+        #start-btn:hover { background:rgba(0,200,255,0.25); color:#fff; }
+        .mode-btn {
+            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.15);
+            color:rgba(255,255,255,0.4); padding:10px 24px; font-family:'Courier New';
+            font-size:12px; letter-spacing:2px; cursor:pointer; border-radius:3px;
+            transition:all 0.2s; pointer-events:all;
+        }
+        .mode-btn:hover { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+        .mode-btn.selected { background:rgba(0,200,255,0.1); border-color:#0cf; color:#0cf; }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+
+<div id="hud">
+    <div id="res-panel">RESOURCES &nbsp;<span id="res-count">0</span></div>
+    <div id="territory-bar"><div class="label">TERRITORY CONTROL</div><div id="terr-bars"></div></div>
+    <div id="hp-bar-wrap"><div class="label">HULL INTEGRITY</div><div id="hp-bar"><div id="hp-fill" style="width:100%"></div></div></div>
+    <div id="shield-bar-wrap"><div class="label">SHIELD</div><div id="shield-bar"><div id="shield-fill" style="width:100%"></div></div></div>
+    <div id="xp-bar-wrap"><div id="xp-top"><span id="level-label">LVL 1</span><span>XP</span></div><div id="xp-bar"><div id="xp-fill"></div></div></div>
+    <div id="faction-badge"><div id="badge-name">TERRAN VANGUARD</div><div class="sub">WASD · MOVE &nbsp;|&nbsp; MOUSE · AIM &nbsp;|&nbsp; LMB · FIRE &nbsp;|&nbsp; B · BUILD</div></div>
+    <canvas id="minimap" width="180" height="180"></canvas>
+    <div id="build-menu">
+        <button class="bbtn" data-build="COMMAND_CENTER">⬡ CMD CENTER<div class="cost">500 res</div><div class="desc">Prereq for miners</div></button>
+        <button class="bbtn" data-build="AUTO_MINER">⛏ AUTO MINER<div class="cost">200 res</div><div class="desc">Passive income</div></button>
+        <button class="bbtn" data-build="TURRET">⦿ TURRET<div class="cost">300 res</div><div class="desc">Auto-attacks enemies</div></button>
+        <button class="bbtn" data-build="SHIELD_GEN">◎ SHIELD GEN<div class="cost">400 res</div><div class="desc">Area protection</div></button>
+        <button class="bbtn" data-build="REPAIR_BCN">✚ REPAIR BCN<div class="cost">250 res</div><div class="desc">Heals nearby ships</div></button>
+    </div>
+    <div id="nearby-nodes"></div>
+    <div id="hud-msg"></div>
+    <div id="build-cursor">PLACE BUILDING</div>
+</div>
+
+<div id="overlay">
+    <h1>TERRITORY.IO</h1>
+    <div class="sub">CONTROL THE SECTOR — MINE · BUILD · CONQUER</div>
+
+    <!-- Mode selector -->
+    <div style="display:flex;gap:12px;margin-bottom:22px">
+        <button id="btn-solo" class="mode-btn selected" style="border-color:#0cf;color:#0cf;">⚔ SINGLEPLAYER</button>
+        <button id="btn-multi" class="mode-btn">⬡ MULTIPLAYER</button>
+    </div>
+
+    <!-- Server browser (hidden by default) -->
+    <div id="server-browser" style="display:none;width:520px;margin-bottom:16px;text-align:left"></div>
+
+    <!-- Faction + ship selection -->
+    <div id="deploy-section">
+        <div class="section-label">SELECT FACTION</div>
+        <div class="factions" id="faction-cards"></div>
+        <div class="section-label">SELECT SHIP CLASS</div>
+        <div id="ship-cards"></div>
+    </div>
+
+    <button id="start-btn">DEPLOY</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/globals.js"></script>
+<script src="js/render.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/xp.js"></script>
+<script src="js/network.js"></script>
+<script src="js/world.js"></script>
+<script src="js/player.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/buildings.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
