@@ -185,14 +185,17 @@ function _initMultiplayer(host) {
     GAME.worldSeed = 99887;
     SEED.init(GAME.worldSeed);
     World.generate();
-    Player.create(); AI.init(); UI.init();
+    Player.create();
+    // Only host runs AI — clients receive AI state
+    if(true) { /* AI.init called after connect when isHost known */ }
+    UI.init();
 
     Network.connect(host, (isHost) => {
-        if (!isHost) {
-            // Clients keep AI ships for local simulation but host is authoritative
-            console.log('Connected as client');
+        if(isHost) {
+            AI.init();
+            console.log('Host — running full simulation');
         } else {
-            console.log('Connected as host');
+            console.log('Client — receiving state from host');
         }
     });
 
@@ -218,14 +221,23 @@ function _loopMulti(now) {
     const dt=Math.min((now-GAME.clock.last)*0.001,0.05);
     GAME.clock.last=now;
 
+    // Everyone runs their own player movement
     Player.update(dt);
-    World.update(dt);
-    Buildings.update(dt);
-    Network.updateRemotePlayers(dt); // host simulates remote players
 
-    // Everyone runs full simulation — host is authoritative via state corrections
-    AI.update(dt);
-    Combat.update(dt);
+    if(Network.isHost()) {
+        // Host runs full authoritative simulation
+        World.update(dt);
+        Buildings.update(dt);
+        Network.updateRemotePlayers(dt);
+        AI.update(dt);
+        Combat.update(dt);
+    }
+    // Clients: Network.update handles extrapolation + sends input
+    // World.update only for visual effects (node pulsing etc) on clients
+    if(!Network.isHost()) {
+        World.update(dt);
+    }
+
     Effects.update(dt);
     Network.update(dt);
     UI.update(dt);
