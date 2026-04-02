@@ -17,13 +17,13 @@ const World = (() => {
         const cols = [0x0a0030, 0x001020, 0x1a0010, 0x000a22];
         for (let i = 0; i < 10; i++) {
             const mesh = new THREE.Mesh(
-                new THREE.SphereGeometry(500+Math.random()*700, 7, 7),
+                new THREE.SphereGeometry(500+SEED.rand()*700, 7, 7),
                 new THREE.MeshBasicMaterial({ color:cols[i%cols.length], transparent:true, opacity:0.12, side:THREE.BackSide })
             );
             mesh.position.set(
-                (Math.random()-0.5)*CONFIG.MAP_SIZE*1.3,
-                -350-Math.random()*200,
-                (Math.random()-0.5)*CONFIG.MAP_SIZE*1.3
+                (SEED.rand()-0.5)*CONFIG.MAP_SIZE*1.3,
+                -350-SEED.rand()*200,
+                (SEED.rand()-0.5)*CONFIG.MAP_SIZE*1.3
             );
             GAME.scene.add(mesh);
         }
@@ -45,8 +45,8 @@ const World = (() => {
 
         rings.forEach(({ count, rMin, rMax }) => {
             for (let i = 0; i < count; i++) {
-                const a = (i/count)*Math.PI*2 + (Math.random()-0.5)*(Math.PI*2/count)*0.35;
-                const r = rMin + Math.random()*(rMax-rMin);
+                const a = (i/count)*Math.PI*2 + (SEED.rand()-0.5)*(Math.PI*2/count)*0.35;
+                const r = rMin + SEED.rand()*(rMax-rMin);
                 _tryAddNode(Math.cos(a)*r, Math.sin(a)*r);
             }
         });
@@ -55,8 +55,8 @@ const World = (() => {
         Object.values(FACTIONS).forEach(f => {
             // Place a small cluster of 3-4 nodes between the base and the centre
             for (let i = 0; i < 5; i++) {
-                const angle = Math.atan2(-f.sz, -f.sx) + (Math.random()-0.5)*0.8;
-                const dist  = 1800 + Math.random()*1400;
+                const angle = Math.atan2(-f.sz, -f.sx) + (SEED.rand()-0.5)*0.8;
+                const dist  = 1800 + SEED.rand()*1400;
                 _tryAddNode(
                     f.sx + Math.cos(angle)*dist * 0.55,
                     f.sz + Math.sin(angle)*dist * 0.55
@@ -102,8 +102,8 @@ const World = (() => {
         let placed   = 0;
         while (placed < CONFIG.RESOURCE_NODES && attempts < CONFIG.RESOURCE_NODES * 8) {
             attempts++;
-            const a = Math.random()*Math.PI*2;
-            const r = 400 + Math.random()*(half - 500);
+            const a = SEED.rand()*Math.PI*2;
+            const r = 400 + SEED.rand()*(half - 500);
             const x = Math.cos(a)*r;
             const z = Math.sin(a)*r;
 

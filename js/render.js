@@ -434,12 +434,12 @@ const Render = (() => {
         const group = new THREE.Group();
         group.position.set(x, 0, z);  // group at world pos, children at local (0,0)
 
-        const size = 40 + Math.random()*30;
-        const seed = Math.random()*200;
+        const size = 40 + SEED.rand()*30;
+        const seed = SEED.rand()*200;
 
         const mRock = new THREE.MeshStandardMaterial({ color:0x252030, roughness:0.92, metalness:0.06 });
         const rock  = _m(_makeAsteroidGeo(size, seed), mRock);
-        rock.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        rock.rotation.set(SEED.rand()*Math.PI, SEED.rand()*Math.PI, Math.random()*Math.PI);
         group.add(rock);  // local (0,0,0)
 
         // Crystal veins — positioned at LOCAL offsets
@@ -468,11 +468,11 @@ const Render = (() => {
 
     // ── DECORATION ASTEROID — same smooth icosphere, just static scene deco ──
     function createDecAsteroid(x, y, z, size) {
-        const seed = Math.random()*200;
+        const seed = SEED.rand()*200;
         const mat  = new THREE.MeshStandardMaterial({ color:0x1e1828, roughness:0.94, metalness:0.04 });
         const mesh = _m(_makeAsteroidGeo(size, seed), mat);
         mesh.position.set(x, y, z);
-        mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        mesh.rotation.set(SEED.rand()*Math.PI, SEED.rand()*Math.PI, Math.random()*Math.PI);
         GAME.scene.add(mesh);
     }
 

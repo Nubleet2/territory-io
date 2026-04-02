@@ -188,7 +188,19 @@ const STATS = {
     resourcesMined:0, buildingsBuilt:0, startTime:0,
 };
 
-// Helper: compute effective player stat
+// Seeded RNG — ensures all clients generate identical worlds
+// Call SEED.init(n) before World.generate(), then use SEED.rand() instead of Math.random()
+const SEED = (() => {
+    let _s = 0;
+    const init = (seed) => { _s = seed >>> 0; };
+    const rand = () => {
+        _s |= 0; _s = _s + 0x6D2B79F5 | 0;
+        let t = Math.imul(_s ^ _s >>> 15, 1 | _s);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+    return { init, rand };
+})();
 // Uses sqrt diminishing returns so dumping all points into one stat
 // gives +~90% at 495 points, not +5000%
 // At 99 points (balanced level 99): +~40% per stat
