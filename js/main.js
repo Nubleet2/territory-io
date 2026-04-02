@@ -221,22 +221,19 @@ function _loopMulti(now) {
     const dt=Math.min((now-GAME.clock.last)*0.001,0.05);
     GAME.clock.last=now;
 
-    // Everyone runs their own player movement
+    // Everyone controls their own ship
     Player.update(dt);
 
     if(Network.isHost()) {
-        // Host runs full authoritative simulation
+        // HOST runs the full authoritative simulation
+        Network.updateRemotePlayers(dt);
         World.update(dt);
         Buildings.update(dt);
-        Network.updateRemotePlayers(dt);
         AI.update(dt);
         Combat.update(dt);
     }
-    // Clients: Network.update handles extrapolation + sends input
-    // World.update only for visual effects (node pulsing etc) on clients
-    if(!Network.isHost()) {
-        World.update(dt);
-    }
+    // Clients: Network.update sends inputs + extrapolates projectiles visually
+    // World.update runs on clients too for node pulse animations + territory income
 
     Effects.update(dt);
     Network.update(dt);
